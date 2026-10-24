@@ -1,7 +1,7 @@
 # DarwinBoot
 
-UEFI bootloader for UniXNU. Loads the payload, kernel, device tree and trust cache, then starts XNU.
+UEFI XNU loader.
 
-Current state: boots from the firmware volume and supports the packed RAM disk handoff.
+boots from the firmware volume and supports the packed RAM disk handoff.
 
-Built as part of the firmware volume.
+Build and interface details: [documentation](https://unixnu.com/reference/components). Component sources and dependencies: [catalog](https://unixnu.com/reference/components).
