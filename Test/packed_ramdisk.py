@@ -54,7 +54,7 @@ def logical_hash(logical, extents):
 
 
 def seed_identity(logical, extents):
-    """Identity of a disk above 2 GiB, as the native block driver computes it (drivers/NativeRamBlock/SeedDisk.h seedIdentity): the size and
+    """Identity of a disk above 2 GiB, as the native block driver computes it (drivers/RamBlock/SeedDisk.h seedIdentity): the size and
     the nonzero pages with their indexes, so hashing a mostly empty disk of hundreds of GiB takes no longer than its content."""
     digest = hashlib.sha256()
     digest.update(b'SHNGSEED2' + struct.pack('<Q', logical))
