@@ -9,8 +9,8 @@ ASM_FUNC(DarwinCurrentEl)
 // PA (0 for none), x5=its size in bytes. EL1 only.
 ASM_FUNC(DarwinEnter)
   msr daifset, #15
-  // Breadcrumb: a green bar (BGRA 0xFF00FF00) over the top 1/16 of the frame
-  // buffer shows that this code ran, whatever the kernel does afterwards.
+  // Paint the top 1/16 of the framebuffer green (BGRA 0xFF00FF00)
+  // before cache maintenance, MMU shutdown and the branch to the kernel.
   cbz x4, 2f
   lsr x9, x5, #4
   bic x9, x9, #7

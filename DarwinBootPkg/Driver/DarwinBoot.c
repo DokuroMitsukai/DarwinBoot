@@ -659,6 +659,7 @@ Boot (
          Kernel.Base, Address, ArgsAddress, Address + Kernel.Entry - Kernel.Base, (UINT64)WindowSize);
   Print (L"DARWINBOOT: video base=0x%lx display=%lu row=%lu width=%lu height=%lu depth=%lu\n",
          Video[0], Video[1], Video[2], Video[3], Video[4], Video[5]);
+  Print (L"DARWINBOOT: command line: %a\n", CommandLine);
   Print (L"DARWINBOOT: inputs validated; exiting boot services\n");
 
   //
@@ -680,7 +681,7 @@ Boot (
   DEBUG ((DEBUG_ERROR, "ID_AA64MMFR0_EL1 0x%lx  (PARange %lu, 4 KiB granule %a)\n", READ_SYSREG (id_aa64mmfr0_el1),
           READ_SYSREG (id_aa64mmfr0_el1) & 0xF, (((READ_SYSREG (id_aa64mmfr0_el1) >> 28) & 0xF) == 0xF) ? "NOT supported" : "supported"));
   DEBUG ((DEBUG_ERROR, "ID_AA64PFR0_EL1  0x%lx\n", READ_SYSREG (id_aa64pfr0_el1)));
-  DEBUG ((DEBUG_ERROR, "\nExiting boot services. A green bar across the top\nmeans the kernel entry code ran.\n"));
+  DEBUG ((DEBUG_ERROR, "\nExiting boot services. A green bar across the top\nmarks the loader handoff before the kernel branch.\n"));
   for (Attempt = 0; Attempt < 3; Attempt++) {
     MapSize = Capacity;
     Status = gBS->GetMemoryMap (&MapSize, Map, &Key, &Stride, &Version);
