@@ -26,6 +26,7 @@
   MemoryAllocationLib
   PrintLib
   UefiBootServicesTableLib
+  UefiDecompressLib
   UefiDriverEntryPoint
   UefiLib
 

@@ -7,6 +7,7 @@
 #include <Library/MemoryAllocationLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/PrintLib.h>
+#include <Library/UefiDecompressLib.h>
 #include <Library/UefiLib.h>
 #include <Protocol/UniXNULoader.h>
 #include <Protocol/LoadedImage.h>
@@ -107,6 +108,49 @@ Done:
   File->Close (File);
   if (EFI_ERROR (Status) && (*Data != NULL)) { FreePool (*Data); *Data = NULL; }
   return Status;
+}
+
+STATIC
+EFI_STATUS
+DecompressKernel (
+  IN OUT VOID   **Data,
+  IN OUT UINTN  *Size
+  )
+{
+  UINT32      DestinationSize;
+  UINT32      ScratchSize;
+  VOID        *Destination;
+  VOID        *Scratch;
+  EFI_STATUS  Status;
+
+  //
+  // A kernel that starts with the Mach-O magic is handed over as is. Anything
+  // else is the UEFI compressed form the payload step writes, so the kernel
+  // fits a small ramdisk.
+  //
+  if ((*Size >= 4) && (U32 (*Data) == 0xfeedfacf)) { return EFI_SUCCESS; }
+  Status = UefiDecompressGetInfo (*Data, (UINT32)*Size, &DestinationSize, &ScratchSize);
+  if (EFI_ERROR (Status) || (DestinationSize == 0) || (DestinationSize > SIZE_128MB)) {
+    Print (L"DARWINBOOT: kernel is neither Mach-O nor EFI-compressed\n");
+    return EFI_UNSUPPORTED;
+  }
+  Destination = AllocatePool (DestinationSize);
+  Scratch = ScratchSize != 0 ? AllocatePool (ScratchSize) : NULL;
+  if ((Destination == NULL) || ((ScratchSize != 0) && (Scratch == NULL))) {
+    if (Destination != NULL) { FreePool (Destination); }
+    return EFI_OUT_OF_RESOURCES;
+  }
+  Status = UefiDecompress (*Data, Destination, Scratch);
+  if (Scratch != NULL) { FreePool (Scratch); }
+  if (EFI_ERROR (Status)) {
+    FreePool (Destination);
+    return Status;
+  }
+  FreePool (*Data);
+  *Data = Destination;
+  *Size = DestinationSize;
+  Print (L"DARWINBOOT: kernel decompressed to %lu bytes\n", (UINT64)DestinationSize);
+  return EFI_SUCCESS;
 }
 
 STATIC
@@ -538,6 +582,8 @@ Boot (
   Status = Fs->OpenVolume (Fs, &Root);
   if (EFI_ERROR (Status)) { return Status; }
   Status = ReadFile (Root, Request->KernelPath, SIZE_128MB, &Image, &ImageSize);
+  if (EFI_ERROR (Status)) { goto Fail; }
+  Status = DecompressKernel (&Image, &ImageSize);
   if (EFI_ERROR (Status)) { goto Fail; }
   Status = ParseKernel (Image, ImageSize, &Kernel);
   if (EFI_ERROR (Status)) { goto Fail; }
