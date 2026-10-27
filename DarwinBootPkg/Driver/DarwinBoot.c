@@ -673,6 +673,12 @@ Boot (
   Args->MemorySizeActual = WindowSize;
   Args->TopOfKernelData = Address + Used;
   CopyMem (Args->Video, Video, sizeof (Video));
+  //
+  // XNU's initialize_screen() treats Video.v_baseAddr as a virtual address
+  // unless bit 0 is set.  The GOP base is physical, so mark it for mapping.
+  // The loader's own Video[] copy stays unmodified for its diagnostic text.
+  //
+  Args->Video[0] |= 1;
   Args->DeviceTree = Kernel.Base + TreeAddress - Address;
   Args->DeviceTreeLength = (UINT32)TreeSize;
   CopyMem (Args->CommandLine, CommandLine, sizeof (CommandLine));
